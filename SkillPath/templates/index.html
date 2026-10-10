@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkillPath | B.Tech Placement Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark">S</div>
+      <h1>SkillPath</h1>
+      <p class="muted">Your B.Tech career companion</p>
+      <nav>
+        <a class="nav-active" href="{{ url_for('index') }}">▦ &nbsp; Dashboard</a>
+        <a href="#roadmap">☷ &nbsp; My Roadmap</a>
+        <a href="#projects">▣ &nbsp; Project Ideas</a>
+        <a href="#internships">↗ &nbsp; Internship Prep</a>
+      </nav>
+      <div class="sidebar-note">
+        <strong>Small steps count.</strong>
+        <p>Build skills consistently, one task at a time.</p>
+      </div>
+      <p class="sidebar-footer">Binary Brains · Hackathon MVP</p>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">STUDENT WORKSPACE</p>
+          <h2>Good to see you, {{ profile.student_name }} 👋</h2>
+          <p class="muted">A practical plan for your next career step.</p>
+        </div>
+        <div class="avatar">{{ profile.student_name[:1]|upper }}</div>
+      </header>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow light">YOUR CAREER JOURNEY</p>
+          <h2>Make your next step<br>your best step.</h2>
+          <p>Plan skills, projects and placement preparation around your current year and target career.</p>
+          <a class="button button-light" href="#roadmap">View my roadmap ↓</a>
+        </div>
+        <div class="hero-orbit"><div class="orbit-inner">SP</div><span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span></div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><span class="stat-icon teal">✓</span><p class="stat-label">Tasks completed</p><h3>{{ completed }} <small>/ {{ total }}</small></h3><p class="muted">For your selected year</p></article>
+        <article class="stat-card"><span class="stat-icon purple">↗</span><p class="stat-label">Roadmap progress</p><h3>{{ percent }}%</h3><div class="progress-track"><div class="progress-fill" style="width: {{ percent }}%"></div></div></article>
+        <article class="stat-card"><span class="stat-icon orange">◎</span><p class="stat-label">Current year</p><h3>{{ year }}<small> / 4</small></h3><p class="muted">B.Tech journey</p></article>
+      </section>
+
+      <section class="panel" id="profile">
+        <div class="section-heading"><div><p class="eyebrow">PERSONALISE</p><h2>Your learning plan</h2></div><span class="pill">Saved locally</span></div>
+        <form class="profile-form" action="{{ url_for('save_profile') }}" method="post">
+          <label>Your name<input name="student_name" value="{{ profile.student_name }}" maxlength="60" required></label>
+          <label>Current year<select name="year">{% for y in [1,2,3,4] %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}{{ 'st' if y==1 else 'nd' if y==2 else 'rd' if y==3 else 'th' }} Year</option>{% endfor %}</select></label>
+          <label>Target career<select name="goal">{% for g in goals %}<option {% if g == goal %}selected{% endif %}>{{ g }}</option>{% endfor %}</select></label>
+          <button class="button" type="submit">Update my plan</button>
+        </form>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel" id="roadmap">
+          <div class="section-heading"><div><p class="eyebrow">YOUR NEXT ACTIONS</p><h2>{{ year }}{% if year == 1 %}st{% elif year == 2 %}nd{% elif year == 3 %}rd{% else %}th{% endif %} year roadmap</h2></div><span class="pill">{{ total }} tasks</span></div>
+          <div class="task-list">
+            {% for task in tasks %}
+            <div class="task-row {% if task.completed %}task-done{% endif %}">
+              <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="post">
+                <button class="check-button {% if task.completed %}checked{% endif %}" aria-label="Toggle {{ task.title }}" title="Mark task complete">{% if task.completed %}✓{% endif %}</button>
+              </form>
+              <div class="task-copy"><div class="task-title">{{ task.title }}</div><p>{{ task.description }}</p><span class="tag">{{ task.category }}</span></div>
+            </div>
+            {% endfor %}
+          </div>
+          <form action="{{ url_for('reset_progress') }}" method="post" class="reset-form" onsubmit="return confirm('Reset all task progress for this demo?')"><button class="text-button" type="submit">Reset demo progress</button></form>
+        </section>
+
+        <div class="right-column">
+          <section class="panel" id="projects">
+            <div class="section-heading"><div><p class="eyebrow">BUILD YOUR PORTFOLIO</p><h2>Project suggestions</h2></div></div>
+            <p class="muted small">Ideas selected for <strong>{{ goal }}</strong>.</p>
+            {% for project in recs.projects %}
+            <div class="recommendation"><span class="rec-icon">✦</span><div><strong>{{ project }}</strong><p>Start small, document your work, and publish it on GitHub.</p></div></div>
+            {% endfor %}
+          </section>
+          <section class="panel" id="skills">
+            <div class="section-heading"><div><p class="eyebrow">CAREER TOOLKIT</p><h2>Priority skills</h2></div></div>
+            <div class="skill-chips">{% for skill in recs.skills %}<span>{{ skill }}</span>{% endfor %}</div>
+          </section>
+          <section class="panel" id="internships">
+            <div class="section-heading"><div><p class="eyebrow">GET EXPERIENCE</p><h2>Internship preparation</h2></div></div>
+            {% for item in recs.internships %}<div class="internship-item"><span>→</span><p>{{ item }}</p></div>{% endfor %}
+          </section>
+        </div>
+      </section>
+      <footer>SkillPath · Built by Binary Brains · Educational planning tool; recommendations should be adapted to each student's goals.</footer>
+    </main>
+  </div>
+</body>
+</html>
